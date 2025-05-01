@@ -5,11 +5,17 @@ const { sequelize } = require("./models"); // Import sequelize instance from mod
 
 const app = express();
 
+//Import routes
+const authRoutes = require("./routes/auth");
+
 // Middleware to parse JSON
 app.use(express.json());
 app.use(cors());
 
-// Basic route
+//Routes
+app.use("/api/auth", authRoutes);
+
+// Home route
 app.get("/", (req, res) => {
     res.send("Todo API is running");
 });
@@ -32,7 +38,7 @@ const connectDB = async () => {
 connectDB();
 
 // Start the server
-const PORT = 3000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
