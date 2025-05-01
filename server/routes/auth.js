@@ -5,6 +5,7 @@ const { check, validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
+const auth = require("../middleware/auth");
 
 router.post(
     "/register",
@@ -96,12 +97,14 @@ router.post(
                 return res.status(400).json({ message: "Invalid credentials" });
             }
 
+            //jwt payload
             const payload = {
                 user: {
                     id: user.id,
                 },
             };
 
+            // JWT sign
             jwt.sign(
                 payload,
                 process.env.JWT_SECRET,
@@ -117,5 +120,16 @@ router.post(
         }
     }
 );
+
+router.get("/user", auth, async (req, res) => {
+    try {
+        const user = await User.findByPk(req.user.id, {
+            attributes: ["id", "username", "email"],
+        });
+        res.json(user);
+    } catch (error) {
+        res.status(500).send("Server Error");
+    }
+});
 
 module.exports = router;
