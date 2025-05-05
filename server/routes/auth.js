@@ -7,6 +7,9 @@ const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 const auth = require("../middleware/auth");
 
+// @route   POST api/auth/register
+// @desc    Register user
+// @access  Public
 router.post(
     "/register",
     [
@@ -70,6 +73,9 @@ router.post(
     }
 );
 
+// @route   POST api/auth/login
+// @desc    Authenticate user & get token
+// @access  Public
 router.post(
     "/login",
     [
@@ -121,6 +127,9 @@ router.post(
     }
 );
 
+// @route   GET api/auth/user
+// @desc    Get user data
+// @access  Private
 router.get("/user", auth, async (req, res) => {
     try {
         const user = await User.findByPk(req.user.id, {

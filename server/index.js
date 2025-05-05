@@ -7,6 +7,7 @@ const app = express();
 
 //Import routes
 const authRoutes = require("./routes/auth");
+const todoRoutes = require("./routes/todos");
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -14,6 +15,7 @@ app.use(cors());
 
 //Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/todos", todoRoutes);
 
 // Home route
 app.get("/", (req, res) => {
