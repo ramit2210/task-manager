@@ -1,9 +1,7 @@
-import React from 'react'
-
+import React from "react";
+import { AuthProvider } from "./context/authContext";
 const App = () => {
-  return (
-    <div className='text-3xl font-bold underline ml-4'>App</div>
-  )
-}
+    return <AuthProvider></AuthProvider>;
+};
 
-export default App
+export default App;
