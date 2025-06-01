@@ -43,7 +43,7 @@ const authReducer = (state, action) => {
                 isAuthenticated: false,
                 loading: false,
                 user: null,
-                error: action.payload, // Keep error message
+                error: action.payload,
             };
         case "CLEAR_ERROR":
             return {
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }) => {
         ) {
             loadUser();
         }
-    }, [state.isAuthenticated, state.token]); // Dependency array: run when isAuthenticated or token changes
+    }, [state.isAuthenticated, state.token]);
 
     // Register user
     const register = async (formData) => {
@@ -119,7 +119,6 @@ export const AuthProvider = ({ children }) => {
                 type: "LOGIN_SUCCESS",
                 payload: res.data,
             });
-            // No need to call loadUser() here, useEffect will handle it
         } catch (err) {
             dispatch({
                 type: "LOGIN_FAIL",
