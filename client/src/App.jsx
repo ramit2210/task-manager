@@ -1,11 +1,14 @@
 import React from "react";
 import { AuthProvider } from "./context/authContext";
 import { TodoProvider } from "./context/TodoContext";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/layout/Navbar";
 import Register from "./components/auth/Register";
 import Login from "./components/auth/Login";
 import Alert from "./components/layout/Alert";
+import Dashboard from "./components/dashboard/Dashboard";
+import PrivateRoute from "./components/routing/PrivateRoute";
+
 const App = () => {
     return (
         <AuthProvider>
