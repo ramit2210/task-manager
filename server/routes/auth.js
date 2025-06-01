@@ -48,7 +48,7 @@ router.post(
             user = await User.create({
                 username,
                 email,
-                password: await bcrypt.hash(password, 20),
+                password: await bcrypt.hash(password, 10),
             });
             // creating JWT payload
             const payload = {

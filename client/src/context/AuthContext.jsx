@@ -29,8 +29,9 @@ const authReducer = (state, action) => {
             return {
                 ...state,
                 token: action.payload.token,
-                isAuthenticated: true,
-                loading: false,
+                isAuthenticated: false, // Keep false until USER_LOADED
+                loading: true, // Set loading to true while we fetch user data
+                error: null,
             };
         case "AUTH_ERROR":
         case "REGISTER_FAIL":
@@ -59,50 +60,55 @@ const authReducer = (state, action) => {
 export const AuthProvider = ({ children }) => {
     const [state, dispatch] = useReducer(authReducer, initialState);
 
-    // This useEffect handles loading the user when the component mounts or token changes
-    useEffect(() => {
-        const loadUser = async () => {
-            if (localStorage.token) {
-                // Check localStorage directly for the token
-                try {
-                    const res = await api.get("/auth/user");
-                    dispatch({
-                        type: "USER_LOADED",
-                        payload: res.data,
-                    });
-                } catch (err) {
-                    dispatch({
-                        type: "AUTH_ERROR",
-                        payload:
-                            err.response?.data?.message ||
-                            "Authentication failed",
-                    });
-                }
-            } else {
-                dispatch({ type: "AUTH_ERROR" }); // No token, so not authenticated
-            }
-        };
+    // Function to load the user
+    const loadUser = async (token = null) => {
+        const tokenToUse =
+            token || state.token || localStorage.getItem("token");
 
-        // Only call loadUser if we are not authenticated yet and a token might exist
-        // or if we are loading and a token exists.
-        // This prevents redundant calls after login/register success
-        if (
-            !state.isAuthenticated &&
-            (state.token || localStorage.getItem("token"))
-        ) {
-            loadUser();
+        if (tokenToUse) {
+            try {
+                const res = await api.get("/auth/user");
+                dispatch({
+                    type: "USER_LOADED",
+                    payload: res.data,
+                });
+            } catch (err) {
+                dispatch({
+                    type: "AUTH_ERROR",
+                    payload:
+                        err.response?.data?.message || "Authentication failed",
+                });
+            }
+        } else {
+            dispatch({
+                type: "AUTH_ERROR",
+                payload: "No token found",
+            });
         }
-    }, [state.isAuthenticated, state.token]);
+    };
+
+    // This useEffect will run once on mount and when token changes
+    useEffect(() => {
+        if (state.token && !state.isAuthenticated && state.loading) {
+            loadUser();
+        } else if (!state.token && state.loading) {
+            dispatch({ type: "AUTH_ERROR", payload: "No token found" });
+        }
+    }, [state.token]); // Simplified dependency array
 
     // Register user
     const register = async (formData) => {
         try {
-            console.log(formData);
+            console.log("Registering user with formData:", formData);
             const res = await api.post("/auth/register", formData);
+            console.log("Register API response:", res.data);
+
             dispatch({
                 type: "REGISTER_SUCCESS",
                 payload: res.data,
             });
+
+            // The useEffect will handle calling loadUser when token changes
         } catch (err) {
             dispatch({
                 type: "REGISTER_FAIL",
@@ -119,6 +125,8 @@ export const AuthProvider = ({ children }) => {
                 type: "LOGIN_SUCCESS",
                 payload: res.data,
             });
+
+            // The useEffect will handle calling loadUser when token changes
         } catch (err) {
             dispatch({
                 type: "LOGIN_FAIL",

@@ -12,13 +12,16 @@ const Register = () => {
     const [formError, setFormError] = useState("");
 
     const { username, email, password, password2 } = formData;
-    const { register, isAuthenticated, error, clearError } =
+    const { register, isAuthenticated, error, clearError, loading } =
         useContext(AuthContext);
     const navigate = useNavigate();
 
     useEffect(() => {
         // Redirect if authenticated
-        if (isAuthenticated) {
+        if (isAuthenticated && !loading) {
+            console.log(
+                "Authenticated and not loading. Navigating to /dashboard"
+            );
             navigate("/dashboard");
         }
 
@@ -26,7 +29,7 @@ const Register = () => {
         return () => {
             clearError();
         };
-    }, [isAuthenticated, navigate]);
+    }, [isAuthenticated, navigate, loading]);
 
     const onChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
