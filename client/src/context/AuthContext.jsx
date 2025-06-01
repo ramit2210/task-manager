@@ -1,9 +1,8 @@
 import React, { createContext, useReducer, useEffect } from "react";
 import api from "../utils/api";
-import { use } from "react";
 
 // Initial state
-const intialState = {
+const initialState = {
     token: localStorage.getItem("token"),
     isAuthenticated: false,
     loading: true,
@@ -11,10 +10,11 @@ const intialState = {
     error: null,
 };
 
-// Creating context
-export const AuthContext = createContext(intialState);
+// Create context
+export const AuthContext = createContext(initialState);
 
-function authReducer(state, action) {
+// Reducer function
+const authReducer = (state, action) => {
     switch (action.type) {
         case "USER_LOADED":
             return {
@@ -43,7 +43,7 @@ function authReducer(state, action) {
                 isAuthenticated: false,
                 loading: false,
                 user: null,
-                error: action.payload,
+                error: action.payload, // Keep error message
             };
         case "CLEAR_ERROR":
             return {
@@ -53,73 +53,90 @@ function authReducer(state, action) {
         default:
             return state;
     }
-}
+};
 
-export function AuthProvider({ children }) {
-    const [state, dispatch] = useReducer(authReducer, intialState);
+// Provider component
+export const AuthProvider = ({ children }) => {
+    const [state, dispatch] = useReducer(authReducer, initialState);
 
-    //Load user data when user logs in
+    // This useEffect handles loading the user when the component mounts or token changes
     useEffect(() => {
-        loadUser();
-    }, [state.token]);
+        const loadUser = async () => {
+            if (localStorage.token) {
+                // Check localStorage directly for the token
+                try {
+                    const res = await api.get("/auth/user");
+                    dispatch({
+                        type: "USER_LOADED",
+                        payload: res.data,
+                    });
+                } catch (err) {
+                    dispatch({
+                        type: "AUTH_ERROR",
+                        payload:
+                            err.response?.data?.message ||
+                            "Authentication failed",
+                    });
+                }
+            } else {
+                dispatch({ type: "AUTH_ERROR" }); // No token, so not authenticated
+            }
+        };
 
-    async function loadUser() {
-        try {
-            const res = await api.get("/auth/user");
-            dispatch({
-                type: "USER_LOADED",
-                payload: res.data,
-            });
-        } catch (err) {
-            dispatch({ type: "AUTH_ERROR" });
+        // Only call loadUser if we are not authenticated yet and a token might exist
+        // or if we are loading and a token exists.
+        // This prevents redundant calls after login/register success
+        if (
+            !state.isAuthenticated &&
+            (state.token || localStorage.getItem("token"))
+        ) {
+            loadUser();
         }
-    }
+    }, [state.isAuthenticated, state.token]); // Dependency array: run when isAuthenticated or token changes
 
-    async function register(formData) {
+    // Register user
+    const register = async (formData) => {
         try {
-            const res = await api.get("/auth/register", formData);
-
+            console.log(formData);
+            const res = await api.post("/auth/register", formData);
             dispatch({
                 type: "REGISTER_SUCCESS",
                 payload: res.data,
             });
-
-            // Load user after registration
-            loadUser();
-        } catch (error) {
+        } catch (err) {
             dispatch({
                 type: "REGISTER_FAIL",
-                payload: error.response?.data?.message || "Registration failed",
+                payload: err.response?.data?.message || "Registration failed",
             });
         }
-    }
+    };
 
-    async function login(formData) {
+    // Login user
+    const login = async (formData) => {
         try {
-            const res = await api.get("/auth/login", formData);
-
+            const res = await api.post("/auth/login", formData);
             dispatch({
                 type: "LOGIN_SUCCESS",
                 payload: res.data,
             });
-
-            // Load user after login
-            loadUser();
-        } catch (error) {
+            // No need to call loadUser() here, useEffect will handle it
+        } catch (err) {
             dispatch({
                 type: "LOGIN_FAIL",
-                payload: error.response?.data?.message || "Login Fail",
+                payload: err.response?.data?.message || "Login failed",
             });
         }
-    }
+    };
 
-    function logout() {
+    // Logout
+    const logout = () => {
         dispatch({ type: "LOGOUT" });
-    }
+    };
 
-    function clearError() {
+    // Clear errors
+    const clearError = () => {
         dispatch({ type: "CLEAR_ERROR" });
-    }
+    };
 
     return (
         <AuthContext.Provider
@@ -138,4 +155,4 @@ export function AuthProvider({ children }) {
             {children}
         </AuthContext.Provider>
     );
-}
+};
