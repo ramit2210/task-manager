@@ -100,7 +100,7 @@ router.put("/:id", auth, async (req, res) => {
 
         res.json(todo);
     } catch (error) {
-        console.error(err.message);
+        console.error(error.message);
         res.status(500).send("Server error");
     }
 });
@@ -108,7 +108,7 @@ router.put("/:id", auth, async (req, res) => {
 // @route   DELETE api/todos/:id
 // @desc    Delete a todo
 // @acces   Private
-router.put("/:id", auth, async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
     try {
         const todo = await Todo.findOne({
             where: {
@@ -125,7 +125,7 @@ router.put("/:id", auth, async (req, res) => {
 
         res.json({ message: "Todo removed" });
     } catch (error) {
-        console.error(err.message);
+        console.error(error.message);
         res.status(500).send("Server error");
     }
 });
